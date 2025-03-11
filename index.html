@@ -64,33 +64,43 @@
     <div class="camera-container">
         <video id="camera" autoplay playsinline></video>
     </div>
+    
     <button class="capture-btn" onclick="captureImage()">Capturar</button>
     <button class="back-btn" onclick="goBack()">Regresar</button>
 
     <script>
         let video = document.getElementById("camera");
+        let currentStream = null;
 
         async function selectCorrectCamera() {
             try {
-                // Liste des caméras disponibles
                 let devices = await navigator.mediaDevices.enumerateDevices();
-                let backCamera = devices.find(device => 
-                    device.kind === "videoinput" && device.label.toLowerCase().includes("back") && !device.label.toLowerCase().includes("zoom")
+                let videoDevices = devices.filter(device => device.kind === "videoinput");
+
+                // On cherche la caméra arrière qui n'est PAS un téléobjectif
+                let backCamera = videoDevices.find(device => 
+                    device.label.toLowerCase().includes("back") && 
+                    !device.label.toLowerCase().includes("zoom") &&
+                    !device.label.toLowerCase().includes("tele")
                 );
 
-                if (backCamera) {
-                    let stream = await navigator.mediaDevices.getUserMedia({
-                        video: {
-                            deviceId: { exact: backCamera.deviceId },
-                            width: { ideal: 1920 },
-                            height: { ideal: 1080 },
-                            frameRate: { ideal: 30 }
-                        }
-                    });
-                    video.srcObject = stream;
-                } else {
-                    alert("Caméra arrière non trouvée !");
+                let selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
+
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop()); // Stopper le flux précédent
                 }
+
+                let stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        deviceId: { exact: selectedDeviceId },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        frameRate: { ideal: 30 }
+                    }
+                });
+
+                currentStream = stream;
+                video.srcObject = stream;
             } catch (error) {
                 alert("Erreur d'accès à la caméra : " + error);
             }
