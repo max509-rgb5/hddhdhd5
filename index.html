@@ -1,128 +1,108 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escanear Documento</title>
+    <title>Accès à la Caméra Arrière</title>
     <style>
         body {
-            background-color: #222;
-            color: white;
-            font-family: 'Courier Prime', monospace;
-            text-align: center;
-            margin: 0;
-            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            position: relative;
-        }
-        .camera-container {
-            width: 90%;
-            max-width: 400px;
-            background: black;
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
+            background-color: #222;
+            color: #fff;
+            margin: 0;
+            font-family: Arial, sans-serif;
         }
         video {
-            width: 100%;
-            height: auto;
-            border-radius: 10px;
-            object-fit: cover;
+            width: 90%;
+            max-width: 600px;
+            border: 2px solid #fff;
+            border-radius: 8px;
         }
-        .scan-instructions {
-            margin-top: 10px;
-            font-size: 14px;
-            color: lightblue;
+        .controls {
+            margin-top: 20px;
         }
-        .capture-btn, .back-btn {
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            width: 100%;
+        button {
+            padding: 10px 20px;
             font-size: 16px;
-            font-weight: bold;
-            margin-top: 10px;
+            margin: 0 10px;
             cursor: pointer;
-        }
-        .capture-btn {
-            background-color: green;
-            color: white;
-        }
-        .back-btn {
-            background-color: red;
-            color: white;
         }
     </style>
 </head>
 <body>
-    <h2>Escanear Documento</h2>
-    <p class="scan-instructions">Coloque su documento dentro del marco y tome una foto.</p>
-    <div class="camera-container">
-        <video id="camera" autoplay playsinline></video>
+
+    <h1>Accès à la Caméra Arrière</h1>
+    <video id="video" autoplay playsinline></video>
+    <div class="controls">
+        <button onclick="captureImage()">Capturer</button>
+        <button onclick="stopCamera()">Arrêter</button>
     </div>
-    
-    <button class="capture-btn" onclick="captureImage()">Capturar</button>
-    <button class="back-btn" onclick="goBack()">Regresar</button>
+    <canvas id="canvas" style="display:none;"></canvas>
 
     <script>
-        let video = document.getElementById("camera");
-        let currentStream = null;
+        let videoElement = document.getElementById('video');
+        let canvasElement = document.getElementById('canvas');
+        let currentStream;
 
-        async function selectCorrectCamera() {
+        async function startCamera() {
             try {
-                let devices = await navigator.mediaDevices.enumerateDevices();
-                let videoDevices = devices.filter(device => device.kind === "videoinput");
-
-                // On cherche la caméra arrière qui n'est PAS un téléobjectif
-                let backCamera = videoDevices.find(device => 
-                    device.label.toLowerCase().includes("back") && 
-                    !device.label.toLowerCase().includes("zoom") &&
-                    !device.label.toLowerCase().includes("tele")
-                );
-
-                let selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
-
-                if (currentStream) {
-                    currentStream.getTracks().forEach(track => track.stop()); // Stopper le flux précédent
-                }
-
-                let stream = await navigator.mediaDevices.getUserMedia({
+                const constraints = {
                     video: {
-                        deviceId: { exact: selectedDeviceId },
+                        facingMode: { exact: 'environment' },
                         width: { ideal: 1920 },
-                        height: { ideal: 1080 },
-                        frameRate: { ideal: 30 }
+                        height: { ideal: 1080 }
                     }
-                });
+                };
 
-                currentStream = stream;
-                video.srcObject = stream;
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                videoElement.srcObject = currentStream;
             } catch (error) {
-                alert("Erreur d'accès à la caméra : " + error);
+                console.warn('Erreur avec facingMode exact:', error);
+
+                // Si l'accès avec facingMode exact échoue, essayer sans exact
+                try {
+                    const constraints = {
+                        video: {
+                            facingMode: 'environment',
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }
+                    };
+
+                    currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    videoElement.srcObject = currentStream;
+                } catch (error) {
+                    console.error('Erreur lors de l\'accès à la caméra :', error);
+                    alert('Impossible d\'accéder à la caméra. Veuillez vérifier les permissions.');
+                }
             }
         }
 
-        selectCorrectCamera();
-
         function captureImage() {
-            let canvas = document.createElement("canvas");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            let context = canvas.getContext("2d");
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            let imageData = canvas.toDataURL("image/png");
+            if (!currentStream) return;
 
-            localStorage.setItem("scannedImage", imageData);
-            alert("Imagen capturada con éxito.");
+            const context = canvasElement.getContext('2d');
+            canvasElement.width = videoElement.videoWidth;
+            canvasElement.height = videoElement.videoHeight;
+            context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+            const imageData = canvasElement.toDataURL('image/png');
+            console.log('Image capturée :', imageData);
+            alert('Image capturée avec succès.');
         }
 
-        function goBack() {
-            window.location.href = "index.html";
+        function stopCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                videoElement.srcObject = null;
+            }
         }
+
+        startCamera();
     </script>
+
 </body>
 </html>
