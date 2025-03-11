@@ -29,7 +29,9 @@
         }
         video {
             width: 100%;
+            height: auto;
             border-radius: 10px;
+            object-fit: cover; /* Ajuste pour éviter les déformations */
         }
         .scan-instructions {
             margin-top: 10px;
@@ -70,10 +72,10 @@
 
         navigator.mediaDevices.getUserMedia({
             video: {
-                facingMode: { exact: "environment" }, // Force la caméra arrière
-                width: { ideal: 1280 }, // Largeur idéale
-                height: { ideal: 720 }, // Hauteur idéale
-                advanced: [{ zoom: 1 }] // Correction du zoom
+                facingMode: { exact: "environment" }, // Caméra arrière uniquement
+                width: { ideal: 1920 }, // Haute résolution
+                height: { ideal: 1080 }, // Haute résolution
+                frameRate: { ideal: 30 }, // Meilleure fluidité
             }
         })
         .then(stream => {
