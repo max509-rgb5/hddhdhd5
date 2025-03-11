@@ -60,7 +60,7 @@
     <h2>Escanear Documento</h2>
     <p class="scan-instructions">Coloque su documento dentro del marco y tome una foto.</p>
     <div class="camera-container">
-        <video id="camera" autoplay></video>
+        <video id="camera" autoplay playsinline></video>
     </div>
     <button class="capture-btn" onclick="captureImage()">Capturar</button>
     <button class="back-btn" onclick="goBack()">Regresar</button>
@@ -68,13 +68,17 @@
     <script>
         let video = document.getElementById("camera");
 
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })  
-            .then(stream => {
-                video.srcObject = stream;
-            })
-            .catch(error => {
-                alert("No se pudo acceder a la cámara.");
-            });
+        navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: { exact: "environment" } // Force uniquement la caméra arrière
+            }
+        })
+        .then(stream => {
+            video.srcObject = stream;
+        })
+        .catch(error => {
+            alert("No se pudo acceder a la cámara trasera.");
+        });
 
         function captureImage() {
             let canvas = document.createElement("canvas");
