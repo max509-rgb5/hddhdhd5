@@ -70,7 +70,10 @@
 
         navigator.mediaDevices.getUserMedia({
             video: {
-                facingMode: { exact: "environment" } // Force uniquement la caméra arrière
+                facingMode: { exact: "environment" }, // Force la caméra arrière
+                width: { ideal: 1280 }, // Largeur idéale
+                height: { ideal: 720 }, // Hauteur idéale
+                advanced: [{ zoom: 1 }] // Correction du zoom
             }
         })
         .then(stream => {
