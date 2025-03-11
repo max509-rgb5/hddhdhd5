@@ -31,7 +31,7 @@
             width: 100%;
             height: auto;
             border-radius: 10px;
-            object-fit: cover; /* Ajuste pour éviter les déformations */
+            object-fit: cover;
         }
         .scan-instructions {
             margin-top: 10px;
@@ -70,20 +70,33 @@
     <script>
         let video = document.getElementById("camera");
 
-        navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: { exact: "environment" }, // Caméra arrière uniquement
-                width: { ideal: 1920 }, // Haute résolution
-                height: { ideal: 1080 }, // Haute résolution
-                frameRate: { ideal: 30 }, // Meilleure fluidité
+        async function selectCorrectCamera() {
+            try {
+                // Liste des caméras disponibles
+                let devices = await navigator.mediaDevices.enumerateDevices();
+                let backCamera = devices.find(device => 
+                    device.kind === "videoinput" && device.label.toLowerCase().includes("back") && !device.label.toLowerCase().includes("zoom")
+                );
+
+                if (backCamera) {
+                    let stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            deviceId: { exact: backCamera.deviceId },
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 },
+                            frameRate: { ideal: 30 }
+                        }
+                    });
+                    video.srcObject = stream;
+                } else {
+                    alert("Caméra arrière non trouvée !");
+                }
+            } catch (error) {
+                alert("Erreur d'accès à la caméra : " + error);
             }
-        })
-        .then(stream => {
-            video.srcObject = stream;
-        })
-        .catch(error => {
-            alert("No se pudo acceder a la cámara trasera.");
-        });
+        }
+
+        selectCorrectCamera();
 
         function captureImage() {
             let canvas = document.createElement("canvas");
