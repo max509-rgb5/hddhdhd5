@@ -1,143 +1,106 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escanear Documento</title>
-    <style>
-        body {
-            background-color: #222;
-            color: white;
-            font-family: 'Courier Prime', monospace;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            position: relative;
-        }
-        .camera-container {
-            width: 90%;
-            max-width: 400px;
-            background: black;
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
-        }
+<!DOCTYPE html>  <html lang="es">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>Escanear Documento</title>  
+    <style>  
+        body {  
+            background-color: #222;  
+            color: white;  
+            font-family: 'Courier Prime', monospace;  
+            text-align: center;  
+            margin: 0;  
+            padding: 0;  
+            display: flex;  
+            flex-direction: column;  
+            align-items: center;  
+            justify-content: center;  
+            height: 100vh;  
+            position: relative;  
+        }  .camera-container {  
+        width: 90%;  
+        max-width: 400px;  
+        background: black;  
+        border-radius: 10px;  
+        overflow: hidden;  
+        position: relative;  
+    }  
 
-        video {
-            width: 100%;
-            border-radius: 10px;
-        }
+    video {  
+        width: 100%;  
+        border-radius: 10px;  
+    }  
 
-        .scan-instructions {
-            margin-top: 10px;
-            font-size: 14px;
-            color: lightblue;
-        }
+    .scan-instructions {  
+        margin-top: 10px;  
+        font-size: 14px;  
+        color: lightblue;  
+    }  
 
-        .capture-btn {
-            background-color: green;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            width: 100%;
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 10px;
-            cursor: pointer;
-        }
+    .capture-btn {  
+        background-color: green;  
+        color: white;  
+        padding: 10px;  
+        border: none;  
+        border-radius: 5px;  
+        width: 100%;  
+        font-size: 16px;  
+        font-weight: bold;  
+        margin-top: 10px;  
+        cursor: pointer;  
+    }  
 
-        .back-btn {
-            background-color: red;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            width: 100%;
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 10px;
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-    <h2>Escanear Documento</h2>
-    <p class="scan-instructions">Coloque su documento dentro del marco y tome una foto.</p>
-    <div class="camera-container">
-        <video id="camera" autoplay playsinline></video>
-    </div>
+    .back-btn {  
+        background-color: red;  
+        color: white;  
+        padding: 10px;  
+        border: none;  
+        border-radius: 5px;  
+        width: 100%;  
+        font-size: 16px;  
+        font-weight: bold;  
+        margin-top: 10px;  
+        cursor: pointer;  
+    }  
+</style>
 
-    <button class="capture-btn" onclick="captureImage()">Capturar</button>
-    <button class="back-btn" onclick="goBack()">Regresar</button>
+</head>  
+<body>  
+    <h2>Escanear Documento</h2>  
+    <p class="scan-instructions">Coloque su documento dentro del marco y tome una foto.</p>  <div class="camera-container">  
+    <video id="camera" autoplay></video>  
+</div>  
 
-    <script>
-        let video = document.getElementById("camera");
+<button class="capture-btn" onclick="captureImage()">Capturar</button>  
+<button class="back-btn" onclick="goBack()">Regresar</button>  
 
-        async function requestCameraAccess() {
-            try {
-                // Obtenir la liste des caméras disponibles
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const cameras = devices.filter(device => device.kind === 'videoinput');
+<script>  
+    let video = document.getElementById("camera");  
 
-                // Trouver la caméra arrière (si disponible)
-                const rearCamera = cameras.find(camera => camera.label.toLowerCase().includes('back'));
+    navigator.mediaDevices.getUserMedia({ video: true })  
+        .then(stream => {  
+            video.srcObject = stream;  
+        })  
+        .catch(error => {  
+            alert("No se pudo acceder a la cámara.");  
+        });  
 
-                if (rearCamera) {
-                    // Utiliser la caméra arrière
-                    const constraints = {
-                        video: {
-                            deviceId: { exact: rearCamera.deviceId },
-                            facingMode: { ideal: 'environment' } // Préférer la caméra arrière
-                        }
-                    };
-                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    video.srcObject = stream;
-                } else {
-                    // Si la caméra arrière n'est pas trouvée, utiliser la caméra par défaut
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    video.srcObject = stream;
-                }
-            } catch (error) {
-                console.error("Erreur lors de l'accès à la caméra :", error);
-                if (error.name === 'NotAllowedError') {
-                    alert("El acceso a la cámara fue denegado. Por favor, permita el acceso para continuar.");
-                } else if (error.name === 'NotFoundError') {
-                    alert("No se encontró ninguna cámara en el dispositivo.");
-                } else {
-                    alert("No se pudo acceder a la cámara: " + error.message);
-                }
-            }
-        }
+    function captureImage() {  
+        let canvas = document.createElement("canvas");  
+        canvas.width = video.videoWidth;  
+        canvas.height = video.videoHeight;  
+        let context = canvas.getContext("2d");  
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);  
+        let imageData = canvas.toDataURL("image/png");  
 
-        function captureImage() {
-            if (!video.srcObject) {
-                alert("No hay acceso a la cámara. Por favor, permita el acceso e intente nuevamente.");
-                return;
-            }
+        localStorage.setItem("scannedImage", imageData);  
+        alert("Imagen capturada con éxito.");  
+    }  
 
-            let canvas = document.createElement("canvas");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            let context = canvas.getContext("2d");
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            let imageData = canvas.toDataURL("image/png");
+    function goBack() {  
+        window.location.href = "index.html";  
+    }  
+</script>
 
-            localStorage.setItem("scannedImage", imageData);
-            alert("Imagen capturada con éxito.");
-        }
-
-        function goBack() {
-            window.location.href = "index.html";
-        }
-
-        // Demander l'accès à la caméra dès que la page est chargée
-        window.onload = requestCameraAccess;
-    </script>
-</body>
+</body>  
 </html>
