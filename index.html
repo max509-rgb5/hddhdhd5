@@ -1,125 +1,184 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caméra Arrière Optimale</title>
+    <title>Escanear Documento</title>
     <style>
         body {
+            background-color: #222;
+            color: white;
+            font-family: 'Courier Prime', monospace;
+            text-align: center;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-color: #222;
-            color: white;
-            font-family: Arial, sans-serif;
-            margin: 0;
+            position: relative;
+        }
+        .camera-container {
+            width: 90%;
+            max-width: 400px;
+            background: black;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
         }
         video {
-            width: 90%;
-            max-width: 600px;
-            border: 2px solid white;
-            border-radius: 8px;
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            object-fit: cover;
         }
-        .controls {
-            margin-top: 20px;
+        .scan-instructions {
+            margin-top: 10px;
+            font-size: 14px;
+            color: lightblue;
         }
-        button {
-            padding: 10px 20px;
+        .capture-btn, .back-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 100%;
             font-size: 16px;
-            margin: 0 10px;
+            font-weight: bold;
+            margin-top: 10px;
             cursor: pointer;
+        }
+        .capture-btn {
+            background-color: green;
+            color: white;
+        }
+        .back-btn {
+            background-color: red;
+            color: white;
         }
     </style>
 </head>
 <body>
-
-    <h1>Caméra Arrière Optimale</h1>
-    <video id="video" autoplay playsinline></video>
-    <div class="controls">
-        <button onclick="captureImage()">Capturer</button>
-        <button onclick="stopCamera()">Arrêter</button>
+    <h2>Escanear Documento</h2>
+    <p class="scan-instructions">Coloque su documento dentro del marco y tome una foto.</p>
+    <div class="camera-container">
+        <video id="camera" autoplay playsinline></video>
     </div>
-    <canvas id="canvas" style="display:none;"></canvas>
+    
+    <button class="capture-btn" onclick="captureImage()">Capturar</button>
+    <button class="back-btn" onclick="goBack()">Regresar</button>
 
     <script>
-        let videoElement = document.getElementById('video');
-        let canvasElement = document.getElementById('canvas');
-        let currentStream;
+        let video = document.getElementById("camera");
+        let currentStream = null;
 
-        async function getBestBackCamera() {
+        // Fonction pour sélectionner la caméra arrière
+        async function selectBackCamera() {
             try {
+                // Obtenir la liste des dispositifs multimédias
                 const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                const videoDevices = devices.filter(device => device.kind === "videoinput");
 
-                // Filtrer pour exclure les caméras avec "zoom" ou "tele"
-                let backCameras = videoDevices.filter(device => 
-                    /back|arrière|environment/i.test(device.label) && 
-                    !/zoom|tele/i.test(device.label)
-                );
-
-                // Si aucune caméra arrière claire n'a été trouvée, prendre la première caméra disponible
-                if (backCameras.length === 0) {
-                    backCameras = videoDevices;
+                // Si une seule caméra est disponible, on l'utilise
+                if (videoDevices.length === 1) {
+                    return videoDevices[0].deviceId;
                 }
 
-                // Retourner le premier appareil détecté comme caméra arrière principale
-                return backCameras.length > 0 ? backCameras[0].deviceId : null;
+                // Tester chaque caméra pour trouver celle qui correspond à la caméra arrière
+                for (const device of videoDevices) {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { deviceId: { exact: device.deviceId } }
+                    });
 
+                    // Vérifier si la caméra est la caméra arrière
+                    const isBackCamera = await checkIfBackCamera(stream);
+                    if (isBackCamera) {
+                        return device.deviceId; // Retourner l'ID de la caméra arrière
+                    }
+
+                    // Arrêter le flux actuel pour tester la prochaine caméra
+                    stream.getTracks().forEach(track => track.stop());
+                }
+
+                // Si aucune caméra arrière n'est trouvée, utiliser la première caméra disponible
+                return videoDevices[0].deviceId;
             } catch (error) {
-                console.error('Erreur lors de la détection des caméras:', error);
+                console.error("Erreur lors de la sélection de la caméra :", error);
                 return null;
             }
         }
 
-        async function startCamera() {
-            try {
-                const bestCameraId = await getBestBackCamera();
+        // Fonction pour vérifier si la caméra est la caméra arrière
+        async function checkIfBackCamera(stream) {
+            const videoTrack = stream.getVideoTracks()[0];
+            const capabilities = videoTrack.getCapabilities();
 
-                if (!bestCameraId) {
-                    alert("Aucune caméra arrière détectée.");
-                    return;
+            // Vérifier si la caméra a une résolution élevée (indicateur de caméra arrière)
+            if (capabilities.width && capabilities.width.max >= 1920) {
+                return true;
+            }
+
+            // Vérifier si la caméra a un zoom optique (indicateur de caméra arrière)
+            if (capabilities.zoom && capabilities.zoom.max > 1) {
+                return true;
+            }
+
+            return false;
+        }
+
+        // Fonction pour démarrer le flux vidéo avec la caméra sélectionnée
+        async function startCamera(deviceId) {
+            try {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
                 }
 
-                const constraints = {
+                const stream = await navigator.mediaDevices.getUserMedia({
                     video: {
-                        deviceId: { exact: bestCameraId },
+                        deviceId: { exact: deviceId },
                         width: { ideal: 1920 },
-                        height: { ideal: 1080 }
+                        height: { ideal: 1080 },
+                        frameRate: { ideal: 30 }
                     }
-                };
+                });
 
-                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-                videoElement.srcObject = currentStream;
-
+                currentStream = stream;
+                video.srcObject = stream;
             } catch (error) {
-                console.error("Erreur lors de l'accès à la caméra:", error);
-                alert("Impossible d'accéder à la caméra. Vérifiez les permissions.");
+                console.error("Erreur lors du démarrage de la caméra :", error);
             }
         }
 
+        // Fonction principale pour sélectionner et démarrer la caméra
+        async function initializeCamera() {
+            const backCameraId = await selectBackCamera();
+            if (backCameraId) {
+                await startCamera(backCameraId);
+            } else {
+                alert("Impossible de trouver la caméra arrière. Utilisation de la caméra par défaut.");
+            }
+        }
+
+        // Fonction pour capturer une image
         function captureImage() {
-            if (!currentStream) return;
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext("2d");
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL("image/png");
 
-            const context = canvasElement.getContext('2d');
-            canvasElement.width = videoElement.videoWidth;
-            canvasElement.height = videoElement.videoHeight;
-            context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-            const imageData = canvasElement.toDataURL('image/png');
-            console.log("Image capturée :", imageData);
-            alert("Image capturée avec succès.");
+            localStorage.setItem("scannedImage", imageData);
+            alert("Imagen capturada con éxito.");
         }
 
-        function stopCamera() {
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-                videoElement.srcObject = null;
-            }
+        // Fonction pour revenir en arrière
+        function goBack() {
+            window.location.href = "index.html";
         }
 
-        startCamera();
+        // Initialiser la caméra au chargement de la page
+        initializeCamera();
     </script>
-
 </body>
 </html>
