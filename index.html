@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accès à la Caméra Arrière</title>
+    <title>Caméra Arrière Optimale</title>
     <style>
         body {
             display: flex;
@@ -12,14 +12,14 @@
             justify-content: center;
             height: 100vh;
             background-color: #222;
-            color: #fff;
-            margin: 0;
+            color: white;
             font-family: Arial, sans-serif;
+            margin: 0;
         }
         video {
             width: 90%;
             max-width: 600px;
-            border: 2px solid #fff;
+            border: 2px solid white;
             border-radius: 8px;
         }
         .controls {
@@ -35,7 +35,7 @@
 </head>
 <body>
 
-    <h1>Accès à la Caméra Arrière</h1>
+    <h1>Caméra Arrière Optimale</h1>
     <video id="video" autoplay playsinline></video>
     <div class="controls">
         <button onclick="captureImage()">Capturer</button>
@@ -48,11 +48,43 @@
         let canvasElement = document.getElementById('canvas');
         let currentStream;
 
+        async function getBestBackCamera() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+                // Filtrer pour exclure les caméras avec "zoom" ou "tele"
+                let backCameras = videoDevices.filter(device => 
+                    /back|arrière|environment/i.test(device.label) && 
+                    !/zoom|tele/i.test(device.label)
+                );
+
+                // Si aucune caméra arrière claire n'a été trouvée, prendre la première caméra disponible
+                if (backCameras.length === 0) {
+                    backCameras = videoDevices;
+                }
+
+                // Retourner le premier appareil détecté comme caméra arrière principale
+                return backCameras.length > 0 ? backCameras[0].deviceId : null;
+
+            } catch (error) {
+                console.error('Erreur lors de la détection des caméras:', error);
+                return null;
+            }
+        }
+
         async function startCamera() {
             try {
+                const bestCameraId = await getBestBackCamera();
+
+                if (!bestCameraId) {
+                    alert("Aucune caméra arrière détectée.");
+                    return;
+                }
+
                 const constraints = {
                     video: {
-                        facingMode: { exact: 'environment' },
+                        deviceId: { exact: bestCameraId },
                         width: { ideal: 1920 },
                         height: { ideal: 1080 }
                     }
@@ -60,25 +92,10 @@
 
                 currentStream = await navigator.mediaDevices.getUserMedia(constraints);
                 videoElement.srcObject = currentStream;
+
             } catch (error) {
-                console.warn('Erreur avec facingMode exact:', error);
-
-                // Si l'accès avec facingMode exact échoue, essayer sans exact
-                try {
-                    const constraints = {
-                        video: {
-                            facingMode: 'environment',
-                            width: { ideal: 1920 },
-                            height: { ideal: 1080 }
-                        }
-                    };
-
-                    currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-                    videoElement.srcObject = currentStream;
-                } catch (error) {
-                    console.error('Erreur lors de l\'accès à la caméra :', error);
-                    alert('Impossible d\'accéder à la caméra. Veuillez vérifier les permissions.');
-                }
+                console.error("Erreur lors de l'accès à la caméra:", error);
+                alert("Impossible d'accéder à la caméra. Vérifiez les permissions.");
             }
         }
 
@@ -90,8 +107,8 @@
             canvasElement.height = videoElement.videoHeight;
             context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
             const imageData = canvasElement.toDataURL('image/png');
-            console.log('Image capturée :', imageData);
-            alert('Image capturée avec succès.');
+            console.log("Image capturée :", imageData);
+            alert("Image capturée avec succès.");
         }
 
         function stopCamera() {
